@@ -71,7 +71,7 @@ def print_formatted(result):
     print("\n" + "=" * 40)
 
 # --- Main program ---
-print("=== JD Analyzer ===")
+print("=== Application Fit Analyzer ===")
 print("Paste your job description below.")
 print("When done, type END on a new line and press Enter.")
 print("")

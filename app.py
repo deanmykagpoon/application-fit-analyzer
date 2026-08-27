@@ -48,7 +48,7 @@ def analyze_jd(jd_text):
 
 def prepare_download(jd_text, result):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    content = f"""=== JD ANALYZER RESULT ===
+    content = f"""=== APPLICATION FIT ANALYZER RESULT ===
 Generated: {timestamp}
 {'=' * 40}
 
@@ -63,10 +63,10 @@ ANALYSIS:
     return content
 
 # --- Streamlit UI ---
-st.set_page_config(page_title="JD Analyzer", page_icon="🔍")
+st.set_page_config(page_title="Application Fit Analyzer", page_icon="🔍")
 
-st.title("🔍 Job Description Analyzer")
-st.write("Paste a job description below and get an instant structured analysis.")
+st.title("🔍 Application Fit Analyzer")
+st.write("Paste a job description below for a structured analysis. CV compatibility checking is in development.")
 
 jd_text = st.text_area(
     label="Job Description",
