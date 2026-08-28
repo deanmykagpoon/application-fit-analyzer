@@ -14,3 +14,11 @@ analysis_*.txt
 # OS junk
 .DS_Store
 JD input.txt
+
+# Claude Code artefacts
+.agents/
+.claude/
+
+# Claude Code artefacts
+.agents/
+.claude/
