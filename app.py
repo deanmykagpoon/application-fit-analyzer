@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -7,7 +8,12 @@ from datetime import datetime
 load_dotenv()
 
 # Set up Anthropic client
-client = Anthropic()
+# st.secrets on Streamlit Cloud, .env locally
+try:
+    api_key = st.secrets["ANTHROPIC_API_KEY"]
+except Exception:
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+client = Anthropic(api_key=api_key)
 
 def analyze_jd(jd_text):
     prompt = f"""
