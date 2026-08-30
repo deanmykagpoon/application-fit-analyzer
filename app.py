@@ -5,6 +5,7 @@ Paste a job description, upload a CV, get an evidence-backed fit assessment.
 CVs are processed in memory only and never written to disk.
 """
 
+import html
 import os
 import re
 
@@ -50,7 +51,7 @@ def render_requirements(requirements):
         st.caption(blurb)
 
         for row in rows:
-            tier = "Essential" if row["importance"] == "essential" else "Desirable"
+            tier = "Must have" if row["importance"] == "essential" else "Nice to have"
             st.markdown(f"**{escape_md(row['requirement'])}**  \n`{tier}`")
             if row.get("evidence"):
                 st.markdown(f"> {escape_md(row['evidence'])}")
@@ -59,35 +60,73 @@ def render_requirements(requirements):
             st.divider()
 
 
+def _headline(essential, desirable):
+    """Plain-language verdict. Must-haves carry the judgement; nice-to-haves qualify it."""
+    e = essential["percentage"]
+    d = desirable["percentage"] if desirable else None
+
+    if e >= 80:
+        base = "Strong fit on the must-haves"
+    elif e >= 60:
+        base = "Reasonable fit, with gaps on the must-haves"
+    elif e >= 35:
+        base = "Weak fit — several must-haves are not evidenced"
+    else:
+        base = "Not a fit on the must-haves"
+
+    if d is None:
+        return base + "."
+    if e >= 60 and d < 40:
+        return base + ", thin on the nice-to-haves."
+    if e >= 60 and d >= 70:
+        return base + ", and well covered on the nice-to-haves."
+    return base + "."
+
+
 def render_results(result):
     essential = result["essential_score"]
     desirable = result["desirable_score"]
 
-    left, right = st.columns(2)
-    with left:
-        st.metric("Essential requirements", f"{essential['percentage']}%")
-        st.caption(
-            f"{essential['met']} evidenced · {essential['partial']} partial · "
-            f"{essential['not_evidenced']} not evidenced · {essential['total']} total"
-        )
-    with right:
-        if desirable:
-            st.metric("Desirable requirements", f"{desirable['percentage']}%")
-            st.caption(
-                f"{desirable['met']} evidenced · {desirable['partial']} partial · "
-                f"{desirable['not_evidenced']} not evidenced · {desirable['total']} total"
-            )
-        else:
-            st.metric("Desirable requirements", "—")
-            st.caption("None identified in this job description")
-
-    st.caption(
-        "Partially evidenced requirements count as half. Every evidenced claim "
-        "is backed by a quote from the CV — check them against your own reading."
+    verdict_line = _headline(essential, desirable)
+    st.markdown(
+        f"<h4 class='afa-centre'>{html.escape(verdict_line)}</h4>",
+        unsafe_allow_html=True,
     )
 
-    st.subheader("Recommendation")
-    st.write(result["recommendation"])
+    st.markdown(
+        f"<div class='afa-centre'>"
+        f"<div class='afa-score'>{essential['percentage']}%</div>"
+        f"<div class='afa-score-label'>of must-have requirements evidenced</div>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        f"{essential['met']} evidenced · {essential['partial']} partial · "
+        f"{essential['not_evidenced']} not evidenced · "
+        f"{essential['total']} must-haves in this job description"
+    )
+
+    if desirable:
+        st.caption(
+            f"Also meets {desirable['percentage']}% of the nice-to-haves "
+            f"({desirable['met']} evidenced, {desirable['partial']} partial "
+            f"of {desirable['total']})."
+        )
+    else:
+        st.caption("No nice-to-have requirements identified in this job description.")
+
+    st.caption(
+        "Partial evidence counts as half. Every evidenced claim is backed by a "
+        "quote from the CV — check them against your own reading."
+    )
+
+    st.markdown(
+        "<h3 class='afa-centre'>Recommendation</h3>", unsafe_allow_html=True
+    )
+    st.markdown(
+        f"<p class='afa-centre'>{html.escape(result['recommendation'])}</p>",
+        unsafe_allow_html=True,
+    )
 
     if result.get("downgraded_count"):
         st.info(
@@ -131,6 +170,28 @@ def render_results(result):
 # --- UI ---
 
 st.set_page_config(page_title="Application Fit Analyzer", page_icon="🔍", layout="centered")
+
+st.markdown(
+    """
+    <style>
+    [data-testid="stMetric"] { text-align: center; }
+    [data-testid="stMetricValue"] { justify-content: center; }
+    .afa-centre { text-align: center; }
+    .afa-score {
+        font-size: 4.5rem;
+        font-weight: 700;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+    }
+    .afa-score-label {
+        font-size: 0.95rem;
+        opacity: 0.65;
+        margin-bottom: 0.75rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 st.title("🔍 Application Fit Analyzer")
 st.write(
