@@ -28,6 +28,7 @@ except Exception:
 client = Anthropic(api_key=api_key)
 
 MAX_JD_CHARS = 20000
+MAX_RUNS_PER_SESSION = 3
 
 VERDICT_ORDER = [
     ("not_evidenced", "Not evidenced", "These gaps are what a screener will notice first."),
@@ -220,6 +221,19 @@ with paste_tab:
 has_cv = cv_file is not None or bool(cv_pasted and cv_pasted.strip())
 ready = bool(jd_text and jd_text.strip()) and has_cv
 
+if "runs" not in st.session_state:
+    st.session_state.runs = 0
+
+runs_left = MAX_RUNS_PER_SESSION - st.session_state.runs
+
+if runs_left <= 0:
+    st.warning(
+        "You have used all the analyses available in this session. This is a "
+        "portfolio demo running on my own API key, so usage is capped. Reload "
+        "the page to start a new session, or run it yourself from the repo."
+    )
+    st.stop()
+
 if not ready:
     st.caption("Add both a job description and a CV to run the analysis.")
 
@@ -240,4 +254,5 @@ if st.button("Analyse fit", type="primary", disabled=not ready):
             st.error(str(exc))
             st.stop()
 
+    st.session_state.runs += 1
     render_results(result)
